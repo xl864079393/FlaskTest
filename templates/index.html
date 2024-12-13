@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECharts Real-Time Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.0.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.0.1/dist/socket.io.min.js"></script>
+</head>
+<body>
+<div id="chart1" style="width: 600px;height:400px;"></div>
+
+<script>
+    // Connect to the Flask server via WebSocket
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    // Function to update the chart with new data
+    function updateChart(chartId, data) {
+        var chartDom = document.getElementById(chartId);
+        var myChart = echarts.init(chartDom);
+        var option = {
+            title: {
+                text: 'Stacked Line'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            toolbox: {
+                feature: {
+                    saveAsImage: {}
+                }
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: Array.from({ length: 12 }, (_, i) => `Day ${i + 1}`)
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: Object.keys(data).map((key) => ({
+                name: key,
+                type: 'line',
+                stack: 'Total',
+                data: data[key]
+            }))
+        };
+        myChart.setOption(option);
+    }
+
+    // Listen for incoming data from the backend via WebSocket
+    socket.on('new_data', function(data) {
+        updateChart('chart1', data);
+    });
+</script>
+</body>
+</html>
